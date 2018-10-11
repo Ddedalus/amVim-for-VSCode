@@ -34,14 +34,20 @@ export class Register {
 
 export class ActionRegister {
 
-    private static stash: Register;
+    static readonly defaultRegister = "p";
+    private static registers = new Map<string, Register>();
 
-    static GetStash(): Register {
-        return ActionRegister.stash;
+    static GetStash(args: {register:string}): Register {
+        console.log("Get stash");
+        const reg = ActionRegister.registers.get(args.register);
+        if(! reg) return new Register({text: ""});
+        console.log("Register " + args.register + ": " + reg.text);
+        return reg;
     }
 
     static yankRanges(args: {
         ranges: Range[],
+        register?: string,
         isLinewise: boolean,
     }): Thenable<boolean> {
         const activeTextEditor = window.activeTextEditor;
@@ -62,16 +68,21 @@ export class ActionRegister {
             return document.getText(document.validateRange(range));
         }).join('');
 
-        ActionRegister.stash = new Register({
+        args.register = args.register === undefined
+                                ? ActionRegister.defaultRegister
+                                : args.register;
+        // ActionRegister.registers.delete(args.register)
+        ActionRegister.registers.set(args.register, new Register({
             text: text,
-            isLinewise: args.isLinewise,
-        });
+            isLinewise: args.isLinewise
+        }));
 
         return Promise.resolve(true);
     }
 
     static yankByMotions(args: {
         motions: Motion[],
+        register?: string,
         isChangeAction?: boolean,
     }): Thenable<boolean> {
         args.isChangeAction = args.isChangeAction === undefined ? false : args.isChangeAction;
@@ -98,11 +109,12 @@ export class ActionRegister {
 
         return ActionRegister.yankRanges({
             ranges: ranges,
+            register: args.register,
             isLinewise: isLinewise,
         });
     }
 
-    static yankByTextObject(args: {textObject: TextObject}): Thenable<boolean> {
+    static yankByTextObject(args: {textObject: TextObject, register?: string}): Thenable<boolean> {
         const activeTextEditor = window.activeTextEditor;
 
         if (! activeTextEditor) {
@@ -128,15 +140,18 @@ export class ActionRegister {
             return document.getText(document.validateRange(range));
         }).join('');
 
-        ActionRegister.stash = new Register({
+        args.register = args.register === undefined
+        ? ActionRegister.defaultRegister
+        : args.register;
+        ActionRegister.registers.set(args.register, new Register({
             text: text,
             isLinewise: args.textObject.isLinewise,
-        });
+        }));
 
         return Promise.resolve(true);
     }
 
-    static yankSelections(args: {isLinewise?: boolean}): Thenable<boolean> {
+    static yankSelections(args: {isLinewise?: boolean, register?: string}): Thenable<boolean> {
         args.isLinewise = args.isLinewise === undefined ? false : args.isLinewise;
 
         const activeTextEditor = window.activeTextEditor;
@@ -151,7 +166,7 @@ export class ActionRegister {
         });
     }
 
-    static yankLines(args: {n?: number}): Thenable<boolean> {
+    static yankLines(args: {n?: number, register?: string}): Thenable<boolean> {
         args.n = args.n === undefined ? 1 : args.n;
 
         const activeTextEditor = window.activeTextEditor;
@@ -168,15 +183,19 @@ export class ActionRegister {
 
         return ActionRegister.yankRanges({
             ranges: ranges,
+            register: args.register,
             isLinewise: true,
         });
     }
 
     @StaticReflect.metadata(SymbolMetadata.Action.isChange, true)
-    static putAfter(args: {n?: number}): Thenable<boolean> {
+    static putAfter(args: {n?: number, register?: string}): Thenable<boolean> {
         args.n = args.n === undefined ? 1 : args.n;
+        args.register = args.register === undefined
+        ? ActionRegister.defaultRegister
+        : args.register;
 
-        if (! ActionRegister.stash) {
+        if (! ActionRegister.registers.has(args.register)) {
             return Promise.resolve(false);
         }
 
@@ -186,7 +205,9 @@ export class ActionRegister {
             return Promise.resolve(false);
         }
 
-        const stash = ActionRegister.stash;
+        const stash = ActionRegister.registers.get(args.register);
+        if(! stash)
+            return Promise.resolve(false);
 
         const putPositions = activeTextEditor.selections.map(selection => {
             return stash.isLinewise
@@ -226,10 +247,13 @@ export class ActionRegister {
     }
 
     @StaticReflect.metadata(SymbolMetadata.Action.isChange, true)
-    static putBefore(args: {n?: number}): Thenable<boolean> {
+    static putBefore(args: {n?: number, register?: string}): Thenable<boolean> {
         args.n = args.n === undefined ? 1 : args.n;
+        args.register = args.register === undefined
+        ? ActionRegister.defaultRegister
+        : args.register;
 
-        if (! ActionRegister.stash) {
+        if (! ActionRegister.registers.has(args.register)) {
             return Promise.resolve(false);
         }
 
@@ -239,7 +263,9 @@ export class ActionRegister {
             return Promise.resolve(false);
         }
 
-        const stash = ActionRegister.stash;
+        const stash = ActionRegister.registers.get(args.register);
+        if(! stash)
+            return Promise.resolve(false);
 
         const putPositions = activeTextEditor.selections.map(selection => {
             return stash.isLinewise

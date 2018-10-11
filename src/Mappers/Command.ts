@@ -4,6 +4,7 @@ import {SpecialKeyN} from './SpecialKeys/N';
 import {SpecialKeyChar} from './SpecialKeys/Char';
 import {SpecialKeyMotion} from './SpecialKeys/Motion';
 import {SpecialKeyTextObject} from './SpecialKeys/TextObject';
+import {SpecialKeyRegister} from './SpecialKeys/Register';
 
 export interface CommandMatchResult extends MatchResult {
     kind: MatchResultKind;
@@ -21,6 +22,7 @@ export class CommandMapper extends GenericMapper {
         super([
             new SpecialKeyN(),
             new SpecialKeyMotion(),
+            new SpecialKeyRegister(),
             new SpecialKeyTextObject(),
             new SpecialKeyChar(),
         ]);

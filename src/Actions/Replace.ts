@@ -16,7 +16,8 @@ export class ActionReplace {
         args.shouldYank = args.shouldYank === undefined ? false : args.shouldYank;
         args.isLinewise = args.isLinewise === undefined ? false : args.isLinewise;
 
-        const stash = ActionRegister.GetStash();
+        // TODO: update to new version
+        const stash = ActionRegister.GetStash({register: "p"});
 
         if (! stash) {
             return Promise.resolve(false);

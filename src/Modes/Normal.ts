@@ -174,6 +174,11 @@ export class ModeNormal extends Mode {
             () => ActionMoveCursor.byMotions({motions: [MotionCharacter.right()]}),
         ] },
 
+        { keys: 'l p', actions: [ActionRegister.GetStash]},
+        { keys: '{N} " {reg} y y', actions: [ActionRegister.yankLines]},
+        { keys: '" {reg} y y', actions: [ActionRegister.yankLines]},
+        { keys: '" {reg} {N} y y', actions: [ActionRegister.yankLines]},    
+        { keys: '" {reg} y {N} y', actions: [ActionRegister.yankLines]},    
         { keys: 'y y', actions: [ActionRegister.yankLines] },
         { keys: '{N} y y', actions: [ActionRegister.yankLines] },
         { keys: 'y {N} y', actions: [ActionRegister.yankLines] },
